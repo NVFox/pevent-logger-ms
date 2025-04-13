@@ -1,4 +1,4 @@
-package com.adt.logger.infrastructure.events.listeners;
+package com.adt.logger.application.events.listeners;
 
 import com.adt.logger.application.events.emitters.LogEmitter;
 import com.adt.logger.domain.entities.Log;
