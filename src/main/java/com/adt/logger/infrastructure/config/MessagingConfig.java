@@ -25,10 +25,10 @@ public class MessagingConfig {
     }
 
     @Bean
-    public Binding eventBinding(Queue logQueue, Exchange notificationsExchange) {
+    public Binding logBinding(Queue logQueue, Exchange notificationsExchange) {
         return BindingBuilder.bind(logQueue)
                 .to(notificationsExchange)
-                .with(MessagingConstants.EVENTS_CHANNEL_NAME)
+                .with(MessagingConstants.LOGS_CHANNEL_NAME)
                 .noargs();
     }
 
