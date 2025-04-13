@@ -1,6 +1,5 @@
 package com.adt.logger.infrastructure.config;
 
-import com.adt.logger.application.constants.MessagingConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
@@ -25,10 +24,12 @@ public class MessagingConfig {
     }
 
     @Bean
-    public Binding logBinding(Queue logQueue, Exchange notificationsExchange) {
+    public Binding logBinding(Queue logQueue,
+                              Exchange notificationsExchange,
+                              @Value("${messaging.notifications-logs.channel-name}") String channelName) {
         return BindingBuilder.bind(logQueue)
                 .to(notificationsExchange)
-                .with(MessagingConstants.LOGS_CHANNEL_NAME)
+                .with(channelName)
                 .noargs();
     }
 
