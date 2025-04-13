@@ -1,4 +1,4 @@
-package com.adt.logger.infrastructure.persistence.db;
+package com.adt.logger.infrastructure.adapters.persistence.db;
 
 import com.adt.logger.domain.entities.Log;
 import com.adt.logger.domain.repositories.LogRepository;
@@ -47,7 +47,7 @@ public class MongoLogRepository implements LogRepository {
             TextCriteria messageCriteria = TextCriteria.forDefaultLanguage()
                     .matching(filter.message());
 
-            query.addCriteria(messageCriteria);
+            query = query.addCriteria(messageCriteria);
         }
 
         return mongoTemplate.find(query, Log.class)
