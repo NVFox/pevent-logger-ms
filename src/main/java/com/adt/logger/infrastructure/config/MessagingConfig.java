@@ -15,8 +15,8 @@ import org.springframework.context.annotation.Configuration;
 @EnableRabbit
 public class MessagingConfig {
     @Bean
-    public Queue eventQueue(@Value("${messaging.notifications-events.queue-name}") String eventQueue) {
-        return new Queue(eventQueue, false);
+    public Queue logQueue(@Value("${messaging.notifications-logs.queue-name}") String logQueue) {
+        return new Queue(logQueue, false);
     }
 
     @Bean
@@ -25,8 +25,8 @@ public class MessagingConfig {
     }
 
     @Bean
-    public Binding eventBinding(Queue eventQueue, Exchange notificationsExchange) {
-        return BindingBuilder.bind(eventQueue)
+    public Binding eventBinding(Queue logQueue, Exchange notificationsExchange) {
+        return BindingBuilder.bind(logQueue)
                 .to(notificationsExchange)
                 .with(MessagingConstants.EVENTS_CHANNEL_NAME)
                 .noargs();

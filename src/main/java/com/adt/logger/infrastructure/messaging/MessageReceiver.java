@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class MessageReceiver {
     private final LogEmitter logEmitter;
 
-    @RabbitListener(queues = "${messaging.notifications-events.queue-name}")
+    @RabbitListener(queues = "${messaging.notifications-logs.queue-name}")
     public void log(Log log) {
         logEmitter.emit(log);
     }
