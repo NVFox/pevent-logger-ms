@@ -1,5 +1,6 @@
 package com.adt.logger.application.queries.handlers;
 
+import com.adt.logger.application.events.emitters.LogEmitter;
 import com.adt.logger.application.queries.GetLogsByQuery;
 import com.adt.logger.domain.entities.Log;
 import com.adt.logger.domain.services.LogService;
@@ -13,22 +14,17 @@ import reactor.core.scheduler.Schedulers;
 @RequiredArgsConstructor
 public class GetLogsByQueryHandler {
     private final LogService logService;
+    private final LogEmitter logEmitter;
 
     public Mono<Page<Log>> handle(GetLogsByQuery query) {
-        return logService.create(Log.info("** Starting logs query with filters: " + query.filter() + " **"))
-                .then(logService.findBy(query.filter(), query.pageable()))
-                .publishOn(Schedulers.boundedElastic())
-                .doOnError(error ->
-                        log(Log.error("Error querying logs: " + error.getMessage())))
-                .doOnSuccess(saved ->
-                        log(Log.info("Logs retrieved successfully (" + saved.getTotalElements() + ")")))
-                .doFinally(signalType ->
-                        log(Log.info("** Log query completed with signal " + signalType + " **")));
-    }
+        logEmitter.emit(Log.info("** Starting logs query with filters: " + query.filter() + " **"));
 
-    private void log(Log log) {
-        logService.create(log)
-                .retry(3)
-                .subscribe();
+        return logService.findBy(query.filter(), query.pageable())
+                .doOnError(error ->
+                        logEmitter.emit(Log.error("Error querying logs: " + error.getMessage())))
+                .doOnSuccess(saved ->
+                        logEmitter.emit(Log.info("Logs retrieved successfully (" + saved.getTotalElements() + ")")))
+                .doFinally(signalType ->
+                        logEmitter.emit(Log.info("** Log query completed with signal " + signalType + " **")));
     }
 }
