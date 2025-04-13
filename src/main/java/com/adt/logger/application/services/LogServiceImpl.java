@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -27,5 +28,10 @@ public class LogServiceImpl implements LogService {
     @Override
     public Mono<Page<Log>> findBy(LogFilter filter, Pageable pageable) {
         return logRepository.findBy(filter, pageable);
+    }
+
+    @Override
+    public Flux<Log> findMostRecent() {
+        return logRepository.findMostRecent();
     }
 }
