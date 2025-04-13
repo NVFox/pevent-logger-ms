@@ -6,6 +6,7 @@ import com.adt.logger.application.queries.handlers.GetLogsByQueryHandler;
 import com.adt.logger.application.queries.handlers.GetRecentLogsQueryHandler;
 import com.adt.logger.domain.entities.Log;
 import com.adt.logger.domain.repositories.filters.LogFilter;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,7 +25,7 @@ public class LogController {
     private final GetRecentLogsQueryHandler getRecentLogsQueryHandler;
 
     @GetMapping
-    public Mono<Page<Log>> getLogsBy(LogQueryParamsDTO queryParams) {
+    public Mono<Page<Log>> getLogsBy(@Valid LogQueryParamsDTO queryParams) {
         LogFilter filter = new LogFilter(
                 queryParams.getTraceId(),
                 queryParams.getLevel(),
