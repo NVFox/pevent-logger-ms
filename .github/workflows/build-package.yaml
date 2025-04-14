@@ -35,6 +35,11 @@ jobs:
         run: |
             VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
             echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      - name: Lowercase github.repository
+        id: repo
+        run: |
+          REPO=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
+          echo "repository=$REPO" >> $GITHUB_OUTPUT
 
       - name: Create Git tag
         run: |
@@ -57,7 +62,7 @@ jobs:
           push: true
           tags: | 
             ${{ steps.meta.outputs.tags }}
-            ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.version.outputs.VERSION }}
+            ${{ env.REGISTRY }}/${{ steps.repo.outputs.REPO }}:${{ steps.version.outputs.VERSION }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Generate artifact attestation
