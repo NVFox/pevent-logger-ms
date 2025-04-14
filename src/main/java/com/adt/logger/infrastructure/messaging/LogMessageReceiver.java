@@ -20,7 +20,7 @@ public class LogMessageReceiver {
 
     @PostConstruct
     public void init() {
-        messageConsumer.consume(logQueue, this::log);
+        messageConsumer.consume(logQueue, Log.class, this::log);
     }
 
     public void log(Log log) {
