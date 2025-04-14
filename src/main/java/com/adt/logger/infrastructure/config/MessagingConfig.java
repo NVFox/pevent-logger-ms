@@ -1,48 +1,87 @@
 package com.adt.logger.infrastructure.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import org.springframework.amqp.core.*;
-import org.springframework.amqp.rabbit.annotation.EnableRabbit;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import reactor.core.publisher.Mono;
+import reactor.rabbitmq.*;
+
+import java.io.IOException;
+import java.util.Objects;
 
 @Configuration
-@EnableRabbit
 public class MessagingConfig {
+    @Autowired
+    private Mono<Connection> connectionMono;
+
+    @Autowired
+    private AmqpAdmin amqpAdmin;
+
+    @Value("${messaging.notifications.topic-name}")
+    private String notificationTopic;
+
+    @Value("${messaging.notifications-logs.queue-name}")
+    private String logQueue;
+
+    @Value("${messaging.notifications-logs.channel-name}")
+    private String logChannel;
+
     @Bean
-    public Queue logQueue(@Value("${messaging.notifications-logs.queue-name}") String logQueue) {
-        return new Queue(logQueue, false);
+    public Mono<Connection> connectionMono(RabbitProperties rabbitProperties) {
+        ConnectionFactory connectionFactory = new ConnectionFactory();
+
+        connectionFactory.setHost(rabbitProperties.getHost());
+        connectionFactory.setPort(rabbitProperties.getPort());
+        connectionFactory.setUsername(rabbitProperties.getUsername());
+        connectionFactory.setPassword(rabbitProperties.getPassword());
+        connectionFactory.useNio();
+
+        return Mono.fromCallable(() -> connectionFactory
+                .newConnection("reactive-logger-rabbitmq")).cache();
     }
 
     @Bean
-    public Exchange notificationsExchange(@Value("${messaging.notifications.topic-name}") String notificationTopic) {
+    public ReceiverOptions receiverOptions(Mono<Connection> connectionMono) {
+        return new ReceiverOptions()
+                .connectionMono(connectionMono);
+    }
+
+    @Bean
+    public Receiver sender(ReceiverOptions receiverOptions) {
+        return RabbitFlux.createReceiver(receiverOptions);
+    }
+
+    private Exchange notificationsExchange() {
         return new TopicExchange(notificationTopic);
     }
 
-    @Bean
-    public Binding logBinding(Queue logQueue,
-                              Exchange notificationsExchange,
-                              @Value("${messaging.notifications-logs.channel-name}") String channelName) {
-        return BindingBuilder.bind(logQueue)
-                .to(notificationsExchange)
-                .with(channelName)
+    private Queue logQueue() {
+        return new Queue(logQueue, true);
+    }
+
+    private Binding logBinding() {
+        return BindingBuilder.bind(logQueue())
+                .to(notificationsExchange())
+                .with(logChannel)
                 .noargs();
     }
 
-    @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory,
-                                         Jackson2JsonMessageConverter converter) {
-        RabbitTemplate template = new RabbitTemplate(connectionFactory);
-        template.setMessageConverter(converter);
-        return template;
+    @PostConstruct
+    public void init() {
+        amqpAdmin.declareQueue(logQueue());
+        amqpAdmin.declareExchange(notificationsExchange());
+        amqpAdmin.declareBinding(logBinding());
     }
 
-    @Bean
-    public Jackson2JsonMessageConverter converter(ObjectMapper objectMapper) {
-        return new Jackson2JsonMessageConverter(objectMapper);
+    @PreDestroy
+    public void close() throws IOException {
+        Objects.requireNonNull(connectionMono.block()).close();
     }
 }
