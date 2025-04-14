@@ -10,7 +10,6 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  REPOSITORY_NAME: ${{ github.repository_owner }}/${{ github.repository }}
 
 jobs:
   build-and-push-image:
@@ -31,17 +30,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get version from pom.xml
-        id: version
-        run: |
-            VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-            echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Get version from pom.xml
+        id: version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          
+      - name: Get repository lowercase
+        id: lower
+        run: |
+          echo "REPOSITORY_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         id: push
@@ -51,7 +55,7 @@ jobs:
           push: true
           tags: | 
             ${{ steps.meta.outputs.tags }}
-            ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ steps.version.outputs.VERSION }}
+            ${{ env.REGISTRY }}/${{ steps.lower.outputs.REPOSITORY_NAME }}:${{ steps.version.outputs.VERSION }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Generate artifact attestation
