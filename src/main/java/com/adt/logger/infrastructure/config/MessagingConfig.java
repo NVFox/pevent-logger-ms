@@ -54,7 +54,7 @@ public class MessagingConfig {
     }
 
     @Bean
-    public Receiver sender(ReceiverOptions receiverOptions) {
+    public Receiver receiver(ReceiverOptions receiverOptions) {
         return RabbitFlux.createReceiver(receiverOptions);
     }
 
@@ -75,8 +75,8 @@ public class MessagingConfig {
 
     @PostConstruct
     public void init() {
-        amqpAdmin.declareQueue(logQueue());
         amqpAdmin.declareExchange(notificationsExchange());
+        amqpAdmin.declareQueue(logQueue());
         amqpAdmin.declareBinding(logBinding());
     }
 
