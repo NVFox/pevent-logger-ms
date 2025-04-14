@@ -25,6 +25,8 @@ ENV RABBIT_PORT=${RABBIT_PORT}
 ENV RABBIT_PASS=${RABBIT_PASS}
 ENV RABBIT_USER=${RABBIT_USER}
 
+LABEL org.opencontainers.image.visibility=public
+
 COPY --from=build /app/target/*.jar /app/app.jar
 
 EXPOSE 8082
