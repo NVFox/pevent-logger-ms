@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.*;
 
@@ -19,6 +20,7 @@ import java.util.Objects;
 @Configuration
 public class MessagingConfig {
     @Autowired
+    @Lazy
     private Mono<Connection> connectionMono;
 
     @Autowired

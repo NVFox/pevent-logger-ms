@@ -1,12 +1,13 @@
 package com.adt.logger.infrastructure.http.handlers;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
+import lombok.NonNull;
+import org.springframework.http.*;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.reactive.result.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
@@ -28,12 +29,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage()));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Mono<ProblemDetail> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+    @Override
+    protected Mono<ResponseEntity<Object>> handleWebExchangeBindException(@NonNull WebExchangeBindException ex,
+                                                                          HttpHeaders headers,
+                                                                          HttpStatusCode status,
+                                                                          ServerWebExchange exchange) {
         ProblemDetail problemDetail = ProblemDetail
-                .forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed for one or more fields");
+                .forStatusAndDetail(status, "Validation failed for one or more fields");
 
-        Map<String, List<String>> errors = e.getFieldErrors()
+        Map<String, List<String>> errors = ex.getFieldErrors()
                 .stream()
                 .collect(Collectors.toMap(
                         FieldError::getField,
@@ -46,7 +50,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         problemDetail.setProperty("errors", errors);
 
-        return Mono.just(problemDetail);
+        return Mono.just(ResponseEntity.badRequest().body(problemDetail));
     }
 
     private String errorMessage(FieldError error) {
