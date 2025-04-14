@@ -10,6 +10,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  REPOSITORY_NAME: ${{ github.repository_owner }}/${{ github.repository }}
 
 jobs:
   build-and-push-image:
@@ -63,7 +64,7 @@ jobs:
           push: true
           tags: | 
             ${{ steps.meta.outputs.tags }}
-            ${{ env.REGISTRY }}/${{ steps.repo.outputs.REPO }}:${{ steps.version.outputs.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ steps.version.outputs.VERSION }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Generate artifact attestation
