@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class MessageReceiver {
+public class LogMessageReceiver {
     private final MessageConsumer messageConsumer;
     private final CreateLogCommandHandler createLogCommandHandler;
 
