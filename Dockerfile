@@ -1,0 +1,32 @@
+FROM maven:3.9.9-eclipse-temurin-17-alpine AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+FROM eclipse-temurin:17-alpine
+WORKDIR /app
+
+ARG DB_NAME
+ARG DB_PASS
+ARG DB_USER
+ARG MONGO_DB_URI
+ARG RABBIT_HOST
+ARG RABBIT_PORT
+ARG RABBIT_PASS
+ARG RABBIT_USER
+
+ENV DB_NAME=${DB_NAME}
+ENV DB_PASS=${DB_PASS}
+ENV DB_USER=${DB_USER}
+ENV MONGO_DB_URI=${MONGO_DB_URI}
+ENV RABBIT_HOST=${RABBIT_HOST}
+ENV RABBIT_PORT=${RABBIT_PORT}
+ENV RABBIT_PASS=${RABBIT_PASS}
+ENV RABBIT_USER=${RABBIT_USER}
+
+COPY --from=build /app/target/*.jar /app/app.jar
+
+EXPOSE 8082
+
+CMD ["java", "-jar", "/app/app.jar"]
